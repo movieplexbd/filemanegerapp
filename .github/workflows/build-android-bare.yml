@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build Bare APK
     runs-on: ubuntu-latest
+    env:
+      EXPO_USE_PNPM: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -24,10 +26,10 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Prebuild to Bare React Native (Android folder generate)
-        run: npx expo prebuild --platform android --no-install --clean
+        run: pnpm exec expo prebuild --platform android --no-install --clean
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -35,6 +37,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Debug APK
+        run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileManager-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
